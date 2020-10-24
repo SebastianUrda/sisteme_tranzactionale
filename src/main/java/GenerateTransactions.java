@@ -13,13 +13,14 @@ public class GenerateTransactions {
     private static int M = 1;//read
     private static int N = 2;//write
     private static int K = 3;//transactions
-    private static List<String> trans=new ArrayList<>();
+    private static List<String> trans = new ArrayList<>();
+
     public static void main(String[] args) {
-      List<Transaction> transactions = new ArrayList<>();
-        System.out.println("M=" + M + " N=" + N +" K= "+K);
+        List<Transaction> transactions = new ArrayList<>();
+        System.out.println("M=" + M + " N=" + N + " K= " + K);
         System.out.println("L=" + variables);
         Transaction transaction = null;
-        int index=1;
+        int index = 1;
         while (transactions.size() < K) {
             do {
                 transaction = generateRandomTransaction(new ArrayList<Operation>());
@@ -132,11 +133,6 @@ public class GenerateTransactions {
 //            a[size - 1] = temp;
 //        }
 //    }
-
-
-
-
-
 
 
 //    public static boolean isTransactionValid(Transaction transaction) {

@@ -1,4 +1,4 @@
-public class Read extends Operation{
+public class Read extends Operation {
 
     public Read() {
         super("read");

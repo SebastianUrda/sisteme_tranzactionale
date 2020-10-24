@@ -4,7 +4,7 @@ import java.util.List;
 
 public class AllTransactions {
 
-    private static List<String> variables = Arrays.asList("x", "y","z");
+    private static List<String> variables = Arrays.asList("x", "y", "z");
     private static int M = 2;//read
     private static int N = 2;//write
     private static List<String> trans = new ArrayList<>();
@@ -48,8 +48,7 @@ public class AllTransactions {
             if (size % 2 == 1) {
                 temp = a[0];
                 a[0] = a[size - 1];
-            }
-            else {
+            } else {
                 temp = a[i];
                 a[i] = a[size - 1];
             }

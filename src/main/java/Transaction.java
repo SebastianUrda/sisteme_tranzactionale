@@ -5,7 +5,7 @@ import java.util.Objects;
 public class Transaction {
     private List<Operation> operations = new ArrayList<Operation>();
 
-    private int index=0;
+    private int index = 0;
 
     public List<Operation> getOperations() {
         return operations;
@@ -22,7 +22,7 @@ public class Transaction {
     public Transaction(List<Operation> operations, int index) {
         this.operations = operations;
         this.index = index;
-        for(Operation operation:this.operations){
+        for (Operation operation : this.operations) {
             operation.setTransactionIndex(index);
         }
     }
@@ -32,16 +32,16 @@ public class Transaction {
     }
 
     public void setIndex(int index) {
-        for(Operation operation:this.operations){
+        for (Operation operation : this.operations) {
             operation.setTransactionIndex(index);
         }
         this.index = index;
     }
 
     public String print() {
-        String toReturn="";
+        String toReturn = "";
         for (Operation operation : operations) {
-            toReturn=toReturn+operation.execute();
+            toReturn = toReturn + operation.execute();
         }
         return toReturn;
     }
