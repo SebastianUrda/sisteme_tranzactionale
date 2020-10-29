@@ -41,7 +41,7 @@ public class Transaction {
     public String print() {
         String toReturn = "";
         for (Operation operation : operations) {
-            toReturn = toReturn + operation.execute();
+            toReturn = toReturn + operation.execute()+" ";
         }
         return toReturn;
     }

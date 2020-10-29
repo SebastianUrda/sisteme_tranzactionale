@@ -11,7 +11,7 @@ public class Operation {
 
 
     public String execute() {
-        return type + " " + transactionIndex + " (" + variable + ") ";
+        return type  + transactionIndex + "(" + variable + ")";
     }
 
     public String getVariable() {
