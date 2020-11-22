@@ -4,8 +4,11 @@ import java.util.stream.Collectors;
 public class TopologicalSortAndCSR {
 
     private static List<Operation> operations;
+    private static List<Operation> commits;
+    private static List<Integer> topologicalSort;
     private static List<String> variables;
     private static ArrayList<ArrayList<Integer>> adjacencyMatrix;
+    private static ArrayList<ArrayList<Integer>> completelyPrecedenceList;
     private static List<List<Integer>> adjacencyList;
     private static int V;
 
@@ -18,8 +21,14 @@ public class TopologicalSortAndCSR {
         } else {
             System.out.println("It does not contain cycles so belongs to CSR ");
         }
-        System.out.println("Topological sort");
         topologicalSort();
+        checkCompletePrecedence();
+        if (isCOCSR()) {
+            System.out.println("It is COCSR");
+        } else {
+            System.out.println("It is NOT COCSR");
+        }
+        System.out.println();
         String h2 = "r1(x)w1(z)r2(z)w1(y)c1r3(y)w2(z)c2w3(x)w3(y)c3";
         generateTransactionFromString(h2);
         generateConflictGraph();
@@ -28,8 +37,14 @@ public class TopologicalSortAndCSR {
         } else {
             System.out.println("It does not contain cycles so belongs to CSR ");
         }
-        System.out.println("Topological sort");
         topologicalSort();
+        checkCompletePrecedence();
+        if (isCOCSR()) {
+            System.out.println("It is COCSR");
+        } else {
+            System.out.println("It is NOT COCSR");
+        }
+        System.out.println();
         String h3 = "r1(z)w5(x)r4(z)w1(y)r5(z)w4(x)c4w3(z)w1(x)c1w2(y)c5c2r3(y)c3";
         generateTransactionFromString(h3);
         generateConflictGraph();
@@ -38,14 +53,73 @@ public class TopologicalSortAndCSR {
         } else {
             System.out.println("It does not contain cycles so belongs to CSR ");
         }
-        System.out.println("Topological sort");
-        topologicalSort();
 
+        topologicalSort();
+        checkCompletePrecedence();
+        if (isCOCSR()) {
+            System.out.println("It is COCSR");
+        } else {
+            System.out.println("It is NOT COCSR");
+        }
+    }
+
+    private static void checkCompletePrecedence() {
+        completelyPrecedenceList = new ArrayList<ArrayList<Integer>>(V);
+        for (int i = 0; i < V; i++)
+            completelyPrecedenceList.add(new ArrayList<Integer>());
+
+        for (Integer currentTransactionIndex : topologicalSort) {
+            int commitPosition = operations.indexOf(new Commit(currentTransactionIndex));
+            List<Operation> leftSideOfCommit = operations.subList(0, commitPosition);
+            List<Operation> rightSideOfCommit = operations.subList(commitPosition + 1, operations.size());
+            List<Integer> transactionsInvolvedInLeftSide = leftSideOfCommit.stream().map(operation -> operation.getTransactionIndex()).distinct().collect(Collectors.toList());
+            List<Integer> transactionsInvolvedInRightSide = rightSideOfCommit.stream().map(operation -> operation.getTransactionIndex()).distinct().collect(Collectors.toList());
+            for (Integer involvedTransaction : transactionsInvolvedInRightSide) {
+                if (!transactionsInvolvedInLeftSide.contains(involvedTransaction)) {
+                    addCompletelyPrecedence(currentTransactionIndex, involvedTransaction);
+                }
+            }
+
+        }
+        System.out.println("Transactions that completely precede each other");
+        List<String> edges = new ArrayList<>();
+        Boolean isOCSR = true;
+        for (int i = 0; i < completelyPrecedenceList.size(); i++) {
+            for (int j = 0; j < completelyPrecedenceList.get(i).size(); j++) {
+                if (topologicalSort.indexOf(i) > topologicalSort.indexOf(completelyPrecedenceList.get(i).get(j))) {
+                    isOCSR = false;
+                }
+                edges.add(i + " " + completelyPrecedenceList.get(i).get(j));
+            }
+        }
+        if (edges.isEmpty()) {
+            System.out.println("No Complete Precedence");
+        } else {
+            edges.forEach(edge -> System.out.println(edge));
+            if (isOCSR) {
+                System.out.println("It is OCSR");
+            } else {
+                System.out.println("It is NOT OCSR");
+            }
+        }
+
+    }
+
+    private static Boolean isCOCSR() {
+        List<Operation> topologicalSortCommits = new ArrayList<>();
+        topologicalSort.forEach(element -> topologicalSortCommits.add(new Commit(element)));
+        Transaction transactionCommit = new Transaction(commits);
+        System.out.println("Commits order");
+        System.out.println(transactionCommit.print());
+        System.out.println("Topological sort commit order ");
+        System.out.println(new Transaction(topologicalSortCommits).print());
+        return topologicalSortCommits.equals(commits);
     }
 
     private static void generateTransactionFromString(String h1) {
         operations = new ArrayList<>();
         variables = new ArrayList<>();
+        commits = new ArrayList<>();
         System.out.println(h1);
         for (int i = 0; i < h1.length(); i++) {
             if (h1.charAt(i) == 'r') {
@@ -64,11 +138,12 @@ public class TopologicalSortAndCSR {
             }
             if (h1.charAt(i) == 'c') {
                 operations.add(new Commit(Character.getNumericValue(h1.charAt(i + 1))));
+                commits.add(new Commit(Character.getNumericValue(h1.charAt(i + 1))));
             }
         }
         Transaction transaction = new Transaction(operations);
         System.out.println(transaction.print());
-        System.out.println(variables);
+
     }
 
     private static void generateConflictGraph() {
@@ -79,9 +154,9 @@ public class TopologicalSortAndCSR {
         }
         Integer numberOfTransactions = operations.stream().max(Comparator.comparingInt(Operation::getTransactionIndex)).orElseThrow().getTransactionIndex();
         V = numberOfTransactions + 1;
-        adjacencyMatrix = new ArrayList<ArrayList<Integer>>(numberOfTransactions + 1);
+        adjacencyMatrix = new ArrayList<ArrayList<Integer>>(V);
 
-        for (int i = 0; i < numberOfTransactions + 1; i++)
+        for (int i = 0; i < V; i++)
             adjacencyMatrix.add(new ArrayList<Integer>());
 
         adjacencyList = new ArrayList<>(V);
@@ -101,17 +176,25 @@ public class TopologicalSortAndCSR {
             }
         });
         System.out.println("Adjacency matrix");
+        List<String> edges = new ArrayList<>();
         for (int i = 0; i < adjacencyMatrix.size(); i++) {
             for (int j = 0; j < adjacencyMatrix.get(i).size(); j++) {
-                System.out.println(i + " " + adjacencyMatrix.get(i).get(j));
+                if (!edges.contains(i + " " + adjacencyMatrix.get(i).get(j))) {
+                    edges.add(i + " " + adjacencyMatrix.get(i).get(j));
+                }
             }
         }
+        edges.forEach(edge -> System.out.println(edge));
 
     }
 
 
     static void addEdgeToMatrix(int v, int w) {
         adjacencyMatrix.get(v).add(w);
+    }
+
+    static void addCompletelyPrecedence(int v, int w) {
+        completelyPrecedenceList.get(v).add(w);
     }
 
     private static boolean isCyclicUtil(int i, boolean[] visited,
@@ -174,7 +257,7 @@ public class TopologicalSortAndCSR {
 
     static void topologicalSort() {
         Stack<Integer> stack = new Stack<Integer>();
-
+        topologicalSort = new ArrayList<>();
         boolean visited[] = new boolean[V];
         for (int i = 0; i < V; i++)
             visited[i] = false;
@@ -187,12 +270,9 @@ public class TopologicalSortAndCSR {
 
         while (stack.empty() == false) {
             int toPrint = stack.pop();
-            if (toPrint == 0) {
-                System.out.print(" ");
-            } else {
-                System.out.print(toPrint + " ");
+            if (toPrint != 0) {
+                topologicalSort.add(toPrint);
             }
         }
-        System.out.println();
     }
 }
